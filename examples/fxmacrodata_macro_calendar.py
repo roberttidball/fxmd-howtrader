@@ -15,7 +15,7 @@ def load_fxmacrodata_events(currency: str = "usd", top_tier_only: bool = True) -
         params["api_key"] = api_key
     query = f"?{urlencode(params)}" if params else ""
     request = Request(
-        f"https://fxmacrodata.com/api/v1/calendar/{currency.lower()}{query}",
+        f"https://api.fxmacrodata.com/v1/calendar/{currency.lower()}{query}",
         headers={"Accept": "application/json", "User-Agent": "howtrader-fxmacrodata-example"},
     )
     with urlopen(request, timeout=20) as response:
