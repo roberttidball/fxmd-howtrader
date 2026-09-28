@@ -4,19 +4,17 @@ import json
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Any
-from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 
 def load_fxmacrodata_events(currency: str = "usd", top_tier_only: bool = True) -> list[dict[str, Any]]:
-    params: dict[str, str] = {}
+    headers = {"Accept": "application/json", "User-Agent": "howtrader-fxmacrodata-example"}
     api_key = os.getenv("FXMD_API_KEY")
     if api_key:
-        params["api_key"] = api_key
-    query = f"?{urlencode(params)}" if params else ""
+        headers["X-API-Key"] = api_key
     request = Request(
-        f"https://api.fxmacrodata.com/v1/calendar/{currency.lower()}{query}",
-        headers={"Accept": "application/json", "User-Agent": "howtrader-fxmacrodata-example"},
+        f"https://api.fxmacrodata.com/v1/calendar/{currency.lower()}",
+        headers=headers,
     )
     with urlopen(request, timeout=20) as response:
         payload = json.loads(response.read().decode("utf-8"))
