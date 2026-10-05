@@ -9,16 +9,22 @@ from urllib.request import Request, urlopen
 
 def load_fxmacrodata_events(currency: str = "usd", top_tier_only: bool = True) -> list[dict[str, Any]]:
     headers = {"Accept": "application/json", "User-Agent": "howtrader-fxmacrodata-example"}
-    api_key = os.getenv("FXMD_API_KEY")
-    if api_key:
-        headers["X-API-Key"] = api_key
     request = Request(
         f"https://api.fxmacrodata.com/v1/calendar/{currency.lower()}",
         headers=headers,
     )
+    api_key = (os.getenv("FXMD_API_KEY") or "").strip()
+    if api_key:
+        if not api_key.isprintable():
+            raise ValueError("FXMD_API_KEY contains invalid characters")
+        # Unredirected: the key is never re-sent if the API answers with a redirect.
+        request.add_unredirected_header("X-API-Key", api_key)
     with urlopen(request, timeout=20) as response:
         payload = json.loads(response.read().decode("utf-8"))
-    rows = list(payload.get("data") or [])
+    data = payload.get("data") if isinstance(payload, dict) else None
+    if not isinstance(data, list):
+        raise ValueError("Unexpected FXMacroData calendar response")
+    rows = [row for row in data if isinstance(row, dict)]
     if top_tier_only:
         rows = [row for row in rows if row.get("top_tier_for_currency") or row.get("market_tier") == 1]
     return rows
